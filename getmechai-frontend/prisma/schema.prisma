@@ -1,0 +1,107 @@
+// GetMeChai Database Schema
+// Mirrors on-chain data and stores off-chain metadata
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Creator {
+  id                 String         @id @default(cuid())
+  walletAddress      String         @unique
+  name               String
+  subscriptionPrice  String         // Wei amount as string
+  bio                String?
+  profileImage       String?
+  isRegistered       Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  
+  posts              Post[]
+  subscribers        Subscription[] @relation("CreatorSubscriptions")
+  earnings           Earning[]
+  
+  @@index([walletAddress])
+}
+
+model Post {
+  id             String   @id @default(cuid())
+  postId         Int      @unique // On-chain post ID
+  creatorAddress String
+  ipfsHash       String
+  caption        String?
+  isFree         Boolean  @default(false)
+  contributions  String   @default("0") // Wei amount as string
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  creator        Creator       @relation(fields: [creatorAddress], references: [walletAddress], onDelete: Cascade)
+  postContributions Contribution[]
+  
+  @@index([creatorAddress])
+  @@index([postId])
+  @@index([isFree])
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  subscriberAddress String
+  creatorAddress    String
+  expiry            DateTime
+  autoPayBalance    String   @default("0") // Wei amount as string
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  creator           Creator  @relation("CreatorSubscriptions", fields: [creatorAddress], references: [walletAddress], onDelete: Cascade)
+  
+  @@unique([subscriberAddress, creatorAddress])
+  @@index([subscriberAddress])
+  @@index([creatorAddress])
+  @@index([expiry])
+}
+
+model Contribution {
+  id                String   @id @default(cuid())
+  postId            Int
+  contributorAddress String
+  amount            String   // Wei amount as string
+  txHash            String   @unique
+  createdAt         DateTime @default(now())
+  
+  post              Post     @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  
+  @@index([postId])
+  @@index([contributorAddress])
+}
+
+model Earning {
+  id             String   @id @default(cuid())
+  creatorAddress String
+  amount         String   // Wei amount as string
+  txHash         String   @unique
+  type           String   // "subscription" | "contribution" | "withdrawal"
+  createdAt      DateTime @default(now())
+  
+  creator        Creator  @relation(fields: [creatorAddress], references: [walletAddress], onDelete: Cascade)
+  
+  @@index([creatorAddress])
+  @@index([type])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  address   String
+  action    String   // "register", "subscribe", "post", "contribute", "withdraw"
+  metadata  Json?
+  txHash    String?
+  createdAt DateTime @default(now())
+  
+  @@index([address])
+  @@index([action])
+  @@index([createdAt])
+}
