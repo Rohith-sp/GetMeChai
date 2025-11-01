@@ -1,6 +1,6 @@
 # GetMeChai
 
-**Note: This application is a work in progress and contains several errors that couldn't be fixed in time. It's being shared for educational purposes and collaboration.**
+**Note: This application is a work in progress and contains several errors that couldn't be fixed in time.**
 
 A decentralized content platform that allows creators to monetize their content through blockchain technology.
 
