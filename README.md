@@ -56,6 +56,3 @@ GetMeChai connects content creators with subscribers using smart contracts on th
 - Ethers.js
 - Tailwind CSS
 
-## License
-
-MIT
